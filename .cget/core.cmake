@@ -55,23 +55,27 @@ function(CGET_BUILD name)
   file(MAKE_DIRECTORY ${dir}/${REL_BUILD_DIR})
   if(EXISTS ${dir}/CMakeLists.txt)
     separate_arguments(ARGS_OPTIONS)
-    set(sub_toolchain_file ${CMAKE_TOOLCHAIN_FILE})
-    if(NOT IS_ABSOLUTE ${sub_toolchain_file})
-      set(sub_toolchain_file ${CMAKE_SOURCE_DIR}/${CMAKE_TOOLCHAIN_FILE})
-    endif()
 
     STRING(REPLACE ";" "\;" root_path_arg "${CMAKE_FIND_ROOT_PATH}")
     STRING(REPLACE ";" "\;" prefix_path_arg "${CMAKE_PREFIX_PATH}")
     
     set(CMAKE_OPTIONS ${ARGS_OPTIONS}
-      -DCMAKE_TOOLCHAIN_FILE=${sub_toolchain_file}
       -DCMAKE_INSTALL_PREFIX:PATH=${CGET_INSTALL_DIR}
       -DCGET_PACKAGE_DIR=${CGET_PACKAGE_DIR}
       -DCGET_INSTALL_DIR=${CGET_INSTALL_DIR}
       -DCGET_CORE_DIR=${CMAKE_CURRENT_LIST_DIR}/
       )
 
-    #message("Calling 'cmake ${CMAKE_OPTIONS} -DCMAKE_FIND_ROOT_PATH:PATH=${root_path_arg} -DCMAKE_PREFIX_PATH:PATH=${prefix_path_arg} .")
+    if(NOT "${CMAKE_TOOLCHAIN_FILE}" STREQUAL "")
+      set(sub_toolchain_file ${CMAKE_TOOLCHAIN_FILE})
+      if(NOT IS_ABSOLUTE ${sub_toolchain_file})
+	set(sub_toolchain_file ${CMAKE_SOURCE_DIR}/${CMAKE_TOOLCHAIN_FILE})
+      endif()
+      list(APPEND CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=${sub_toolchain_file})
+    endif()
+
+    
+    message("Calling 'cmake ${CMAKE_OPTIONS} -DCMAKE_FIND_ROOT_PATH:PATH=${root_path_arg} -DCMAKE_PREFIX_PATH:PATH=${prefix_path_arg} .")
     execute_process(COMMAND cmake --no-warn-unused-cli ${CMAKE_OPTIONS} -DCMAKE_FIND_ROOT_PATH:PATH=${root_path_arg} -DCMAKE_PREFIX_PATH:PATH=${prefix_path_arg}  .
       WORKING_DIRECTORY ${dir}/${REL_BUILD_DIR})
     execute_process(COMMAND cmake --build . --target install
