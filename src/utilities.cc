@@ -7,7 +7,20 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+
+#ifndef _WIN32 
 #include <unistd.h>
+static void cget_create_dir(const std::string& dir) {
+  mkdir(dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+}
+#else
+#define PATH_MAX 4096
+#include <direct.h>
+#include <windows.h>
+static void cget_create_dir(const std::string& dir) {
+CreateDirectory(dir.c_str(), NULL);
+}
+#endif
 
 #include "generated/cget_core_cmake.h"
 #include <cget/utilities.h>
@@ -84,7 +97,7 @@ namespace cget {
 
   void init_project() {  
     if(!file_exists(corePath)) {
-      mkdir(".cget", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+      cget_create_dir(".cget");
       std::ofstream corelib(corePath);
       std::cout << "IMPORTANT: Default core library file added at '.cget/core.cmake'. It's recommended that you add it to your repo. " << std::endl;
       corelib.write((const char*)_cget_core_cmake, _cget_core_cmake_len);
@@ -168,6 +181,7 @@ namespace cget {
     case RepoSource::URL: return "URL";
     case RepoSource::REGISTRY: return "REGISTRY";
     }
+    return "<UNKNOWN>";
   }
 
   RepoMetadata getMetaData(const std::string& id) {
@@ -175,9 +189,12 @@ namespace cget {
     auto pos = id.find_last_of("/");
     if(pos != std::string::npos)
       name = id.substr(pos+1); 
-    return (RepoMetadata) {
-      name, RepoSource::GITHUB, id, "HEAD"
-	};
+    RepoMetadata repo; 
+    repo.name = name;
+    repo.source = RepoSource::GITHUB;
+    repo.url = id; 
+    repo.version = "HEAD";
+    return repo; 
   };
 
 }

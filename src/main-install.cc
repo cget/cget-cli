@@ -96,12 +96,12 @@ static RepoMetadata ParseTermGetRepo(const std::string& target, const std::vecto
 	std::cout << "Warning -- could not find proper cmake project name for package, basing it off of github path" << std::endl;      
       }
       bool isInRegistry = toLower(choice->fullname) == toLower("cget/" + name + ".cget");
-      return (RepoMetadata) {
-	name,
-	  isInRegistry ? RepoSource::REGISTRY : RepoSource::GITHUB,
-	  choice->fullname,
-	  LatestVersionByName(choice->fullname)
-      };
+      RepoMetadata repo; 
+      repo.name = name;
+      repo.source = isInRegistry ? RepoSource::REGISTRY : RepoSource::GITHUB;
+      repo.url = choice->fullname;
+      repo.version = LatestVersionByName(choice->fullname);
+      return repo;
     }    
   }
 
@@ -123,13 +123,12 @@ static RepoMetadata ParseTermGetRepo(const std::string& target, const std::vecto
       case RepoSource::HG: version = "tip"; break;
       default: break;
       }
-      
-      return (RepoMetadata) {
-	m[1],
-	  check.second,
-	  target,
-	  version,
-	  };
+      RepoMetadata repo; 
+      repo.name = m[1];
+      repo.version = check.second;
+      repo.url = target;
+      repo.version = version;
+      return repo; 
     }
   }
   
