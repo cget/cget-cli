@@ -8,7 +8,7 @@ if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
 
-#set(CGET_USE_ONLY_CGET_PACKAGES On)
+set(CGET_USE_ONLY_CGET_PACKAGES On)
 include(package.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -45,3 +45,7 @@ target_link_libraries(cget-cli cget
   ${RapidJSON_LIBRARY}
   )
 set_target_properties(cget-cli PROPERTIES OUTPUT_NAME cget)
+
+install(TARGETS cget-cli DESTINATION bin)
+install(DIRECTORY ${CGET_INSTALL_DIR}/ DESTINATION /)
+
