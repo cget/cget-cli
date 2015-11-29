@@ -95,7 +95,7 @@ static RepoMetadata ParseTermGetRepo(const std::string& target, const std::vecto
       } else {
 	std::cout << "Warning -- could not find proper cmake project name for package, basing it off of github path" << std::endl;      
       }
-      bool isInRegistry = choice->fullname == "cget/" + name;
+      bool isInRegistry = toLower(choice->fullname) == toLower("cget/" + name + ".cget");
       return (RepoMetadata) {
 	name,
 	  isInRegistry ? RepoSource::REGISTRY : RepoSource::GITHUB,

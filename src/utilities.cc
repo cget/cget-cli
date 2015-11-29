@@ -93,7 +93,7 @@ namespace cget {
     if(file_exists(packageFile))
       return;
     std::ofstream cget(packageFile);     
-    cget << "include(" << corePath << ")" << std::endl << std::endl;
+    cget << "include(${CGET_CORE_DIR}" << corePath << ")" << std::endl << std::endl;
   }
 
 
@@ -135,6 +135,27 @@ namespace cget {
       outfile << "VERSION " << meta.version;
     outfile << ")" << std::endl;
 
+
+    switch(meta.source) {
+    case RepoSource::GITHUB:
+      std::cout << "Adding dependency to github repo '" << meta.url << "'." << std::endl;
+      break;
+    case RepoSource::GIT: 
+      std::cout << "Adding dependency to git repo at '" << meta.url << "'." << std::endl;
+      break;
+    case RepoSource::HG:
+      std::cout << "Adding dependency to mercurial repo at '" << meta.url << "'." << std::endl;
+      break;
+    case RepoSource::SVN:
+      std::cout << "Adding dependency to subversion repo at '" << meta.url << "'." << std::endl;
+      break;
+    case RepoSource::URL: 
+      std::cout << "Adding dependency to tarball at '" << meta.url << "'." << std::endl;
+      break;
+    case RepoSource::REGISTRY:
+      std::cout << "Package found in cget registry as '" << meta.name << "'." << std::endl;
+      break;
+    }
   }
 
   std::string RepoSource::ToString(RepoSource::t t) {

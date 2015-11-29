@@ -138,7 +138,7 @@ namespace cget {
       for(auto& l : ls) {
 	q += "language:" + l + " ";    
       }
-      std::cout << q << std::endl;
+
       q = curl_handle::instance.Escape(q);
       std::string url = "https://api.github.com/search/repositories?q=" + q + "&sort=stars&order=desc";
       auto doc = curl_handle::instance.GetJSON(url);
@@ -150,7 +150,6 @@ namespace cget {
   
       auto& items = (*doc)["items"];
       infos.reserve(items.Size());
-      std::cout << items.Size() << " results" << std::endl;
       for(int forceNameMatch = 1;forceNameMatch >= 0;forceNameMatch--) {
 	for(SizeType i = 0;i < items.Size();i++){
 	  auto& item = items[i];
