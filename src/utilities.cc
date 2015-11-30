@@ -11,14 +11,14 @@
 #ifndef _WIN32 
 #include <unistd.h>
 static void cget_create_dir(const std::string& dir) {
-  mkdir(dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+  mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 #else
 #define PATH_MAX 4096
 #include <direct.h>
 #include <windows.h>
 static void cget_create_dir(const std::string& dir) {
-CreateDirectory(dir.c_str(), NULL);
+  CreateDirectory(dir.c_str(), NULL);
 }
 #endif
 

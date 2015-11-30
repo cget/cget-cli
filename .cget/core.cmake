@@ -99,8 +99,8 @@ function(CGET_BUILD name)
   endforeach()
 
   if(NOT CGET_${name}_BUILT)
-    message(FATAL_ERROR "Couldn't identify build system for ${name}")
     file(MOVE ${dir}/${REL_BUILD_DIR} ${dir}/${REL_BUILD_DIR}_fail)
+    message(FATAL_ERROR "Couldn't identify build system for ${name}")
   endif()
   
   CGET_NORMALIZE_CMAKE_FILES("${dir}/${REL_BUILD_DIR}" "Config.cmake" "config.cmake")
