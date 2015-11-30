@@ -11,11 +11,11 @@
 using namespace std::regex_constants;
 
 static std::regex specific_github("^\\w+/\\w+$", ECMAScript | icase);
-static std::regex search_term("^\\w+$", ECMAScript | icase);
-static std::regex git_repo("^.*/([\\w\\.]+)/?\\.git/?$", ECMAScript | icase);
+static std::regex search_term("^[\\w_\\-\\.]+$", ECMAScript | icase);
+static std::regex git_repo("^.*/([^/]+)/?\\.git/?$", ECMAScript | icase);
 static std::regex hg_repo("^.*(\\w*)\\\\?\\.hg$", ECMAScript | icase);
 static std::regex svn_repo("^svn://.*/(\\w*)/?$", ECMAScript | icase);
-static std::regex url("^.*(\\w*)[\\.tar(\\.gz)?|\\.zip]$", ECMAScript | icase);
+static std::regex url("^.*/([^/]+)[\\.tar(\\.gz)?(\\.bz2)?|\\.zip]$", ECMAScript | icase);
 
 using namespace cget;
 using namespace cget::github; 
@@ -113,7 +113,7 @@ static RepoMetadata ParseTermGetRepo(const std::string& target, const std::vecto
     };
   
   for(auto check : repo_types ) {
-    std::cout << "Trying regex..." << std::endl;
+    std::cout << "Trying " << RepoSource::ToString(check.second) << std::endl;
     if( std::regex_search(target, m, check.first) ) {
       std::cout << "regex matched... " << m.str() << " " << m[0] << " " << m[1] << std::endl;
 
@@ -125,7 +125,7 @@ static RepoMetadata ParseTermGetRepo(const std::string& target, const std::vecto
       }
       RepoMetadata repo; 
       repo.name = m[1];
-      repo.version = check.second;
+      repo.source = check.second;
       repo.url = target;
       repo.version = version;
       return repo; 

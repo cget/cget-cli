@@ -20,7 +20,7 @@ SET(REL_BUILD_DIR "")
 
 macro(CGET_PARSE_VERSION NAME INPUT RESULT)
   SET(${RESULT} ${${INPUT}})
-  STRING(TOLOWER ${${RESULT}} ${RESULT})
+  STRING(TOLOWER "${${RESULT}}" ${RESULT})
   STRING(TOLOWER ${NAME} CGET_${NAME}_LOWER)
   STRING(REPLACE "${CGET_${NAME}_LOWER}" "" ${RESULT} "${${RESULT}}")
   STRING(REGEX MATCH "([0-9]+[\\._]?)+" ${RESULT} "${${RESULT}}")
@@ -73,8 +73,7 @@ function(CGET_BUILD name)
       endif()
       list(APPEND CMAKE_OPTIONS -DCMAKE_TOOLCHAIN_FILE=${sub_toolchain_file})
     endif()
-
-    
+   
     message("Calling 'cmake ${CMAKE_OPTIONS} -DCMAKE_FIND_ROOT_PATH:PATH=${root_path_arg} -DCMAKE_PREFIX_PATH:PATH=${prefix_path_arg} .")
     execute_process(COMMAND cmake --no-warn-unused-cli ${CMAKE_OPTIONS} -DCMAKE_FIND_ROOT_PATH:PATH=${root_path_arg} -DCMAKE_PREFIX_PATH:PATH=${prefix_path_arg}  .
       WORKING_DIRECTORY ${dir}/${REL_BUILD_DIR})
@@ -99,7 +98,7 @@ function(CGET_BUILD name)
   endforeach()
 
   if(NOT CGET_${name}_BUILT)
-    file(MOVE ${dir}/${REL_BUILD_DIR} ${dir}/${REL_BUILD_DIR}_fail)
+    file(RENAME ${dir}/${REL_BUILD_DIR} ${dir}.failed/${REL_BUILD_DIR})
     message(FATAL_ERROR "Couldn't identify build system for ${name}")
   endif()
   
