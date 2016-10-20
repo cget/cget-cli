@@ -18,7 +18,7 @@ namespace cget {
     };
 
     std::string LatestVersionByName(const std::string& name); 
-    std::vector<RepoInfo> SearchByName(const std::string& name, const std::vector<std::string>& langs);
+    std::vector<RepoInfo> SearchByName(const std::string& name, const std::vector<std::string>& langs, bool exactNameMatch = false);
     std::vector<RepoInfo> GetCandidates(const std::string& name, const std::vector<std::string>& langs); 
     RepoInfo Get(const std::string& name);
   }

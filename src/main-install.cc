@@ -11,7 +11,7 @@
 using namespace std::regex_constants;
 
 static std::regex specific_github("^\\w+/\\w+$", ECMAScript | icase);
-static std::regex search_term("^[\\w_\\-\\.]+$", ECMAScript | icase);
+static std::regex search_term("^[\\w\\-\\.]+$", ECMAScript | icase);
 static std::regex git_repo("^.*/([^/]+)/?\\.git/?$", ECMAScript | icase);
 static std::regex hg_repo("^.*(\\w*)\\\\?\\.hg$", ECMAScript | icase);
 static std::regex svn_repo("^svn://.*/(\\w*)/?$", ECMAScript | icase);
@@ -90,12 +90,14 @@ static RepoMetadata ParseTermGetRepo(const std::string& target, const std::vecto
     if(choice) {
       auto cmake_desc = GetCMakeDesc(choice->fullname);
       std::string name = choice->name;
+	    bool cgetPackage = name.find(".cget") > 0;
+
       if(cmake_desc.name != "") {
-	name = cmake_desc.name;
-      } else {
-	std::cout << "Warning -- could not find proper cmake project name for package, basing it off of github path" << std::endl;      
+			name = cmake_desc.name;
+      } else if(!cgetPackage){
+			std::cout << "Warning -- could not find proper cmake project name for package, basing it off of github path" << std::endl;
       }
-      bool isInRegistry = toLower(choice->fullname) == toLower("cget/" + name + ".cget");
+	    bool isInRegistry = toLower(choice->fullname).find("cget/") == 0 && cgetPackage;
       RepoMetadata repo; 
       repo.name = name;
       repo.source = isInRegistry ? RepoSource::REGISTRY : RepoSource::GITHUB;

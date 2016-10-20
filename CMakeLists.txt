@@ -8,7 +8,7 @@ if(CCACHE_FOUND)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
 endif(CCACHE_FOUND)
 
-set(CGET_USE_ONLY_CGET_PACKAGES On)
+set(CGET_USE_ONLY_CGET_PACKAGES ON)
 include(package.cmake)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -23,7 +23,7 @@ add_custom_command(
 include_directories(include
   ${gflags_INCLUDE_DIR}
   ${CURL_INCLUDE_DIR}
-  ${RapidJSON_LIBRARY}
+  ${RAPIDJSON_INCLUDE_DIRS}
   )
 
 
@@ -37,12 +37,11 @@ add_executable(cget-cli
 
   src/github-search.cc
   src/cmake-utils.cc
-  )
+)
 
 target_link_libraries(cget-cli cget
   ${gflags_LIBRARIES}
   ${CURL_LIBRARY}
-  ${RapidJSON_LIBRARY}
   )
 set_target_properties(cget-cli PROPERTIES OUTPUT_NAME cget)
 
