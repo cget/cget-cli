@@ -1,4 +1,10 @@
-include(${CGET_CORE_DIR}.cget/core.cmake)
+IF(NOT EXISTS "${CMAKE_SOURCE_DIR}/.cget")
+        IF(NOT DEFINED CGET_REPO_LOCATION)
+            set(CGET_REPO_LOCATION https://github.com/cget/cget-core)
+        ENDIF()
+        EXECUTE_PROCESS(COMMAND git clone ${CGET_REPO_LOCATION} "${CMAKE_SOURCE_DIR}/.cget" -bmaster)
+ENDIF()
+include("${CMAKE_SOURCE_DIR}/.cget/core.cmake" REQUIRED)
 
 CGET_HAS_DEPENDENCY(RapidJSON GITHUB miloyip/rapidjson VERSION v1.0.2
   OPTIONS "-DRAPIDJSON_BUILD_TESTS=OFF -DRAPIDJSON_BUILD_DOC=OFF -DRAPIDJSON_BUILD_EXAMPLES=OFF")
