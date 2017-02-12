@@ -17,7 +17,9 @@ static void cget_create_dir(const std::string &dir) {
 }
 
 #else
+#ifndef PATH_MAX
 #define PATH_MAX 4096
+#endif
 #include <direct.h>
 #include <windows.h>
 static void cget_create_dir(const std::string& dir) {
