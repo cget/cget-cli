@@ -1,3 +1,6 @@
 [submodule "ThirdParty/xxd"]
 	path = ThirdParty/xxd
 	url = https://github.com/ThatOtherPerson/xxd.git
+[submodule ".cget"]
+	path = .cget
+	url = https://github.com/cget/cget-core
