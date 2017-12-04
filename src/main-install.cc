@@ -60,7 +60,7 @@ static std::shared_ptr<RepoInfo> choose_repo(const std::string& target,
   
   for(int i = 0;i < display_repos.size();i++) {
     auto& info = display_repos[i];
-    printf("[%2d] %-*s - (%d) %s\n", i+1, nameSize, info.fullname.c_str(), info.stars, info.desc.c_str());
+    printf("[%2d] %-*s - (%d) %s\n", i+1, (int)nameSize, info.fullname.c_str(), (int)info.stars, info.desc.c_str());
   }
 
   std::cout << "Choose 1-" << display_repos.size() << " [1] "; 
@@ -143,10 +143,16 @@ int main_install(int argc, char* argv[]) {
     return -1; 
   }
   std::string target = argv[2];
+
+  std::string as_submodule_loc = "";
+  if(argc >= 3) {
+    as_submodule_loc = argv[3];
+  }
+    
   auto desc = cmake_get_desc();
   auto repo = ParseTermGetRepo(target, desc.languages);
   if(repo.name.size()) {
-    insert(repo);
+    insert(repo, as_submodule_loc);
   } else {
     std::cerr << "Error: couldn't find an installation candidate for '" << target << "'" << std::endl;
   }

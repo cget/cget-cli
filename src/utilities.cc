@@ -51,7 +51,16 @@ static void copy(const char *a, const char *b) {
 }
 
 namespace cget {
-
+  std::string RepoMetadata::FullUrl() const {
+    switch (source) {
+    case RepoSource::GITHUB:
+    case RepoSource::REGISTRY:      
+      return "https://github.com/" + url + ".git"; 
+    default:
+      return url;
+    }
+  }
+  
 	void insert_hook() {
 		const char *original = "./CMakeLists.txt";
 		const char *temp = "./CMakeLists.txt.tmp";
@@ -121,57 +130,58 @@ namespace cget {
     return git_submodule_open(out, sm);
   }
 
+  void submodule_add_if_not_exist(const std::string& url,
+				  const std::string& path) {
+    bool fileExists = file_exists(path + "/.git");
+
+    if (!fileExists) {
+      std::cout << "Adding submodule " << url << " at " << path << std::endl;
+      git_submodule *sm = 0;
+      git_repository *smrepo = 0, *g_repo = 0;
+
+      handle_libgit_ret(git_repository_open(&g_repo, "."));
+      std::cerr << git_repository_path(g_repo) << std::endl;
+		
+	        
+      handle_libgit_ret(git_submodule_add_setup(&sm, g_repo,
+						url.c_str(),
+						path.c_str(),
+						1));
+
+      if(sm) {
+	std::cerr << "Added" << std::endl;
+	handle_libgit_ret(git_submodule_open(&smrepo, sm));
+
+	git_remote* remote = 0;
+	git_remote_lookup(&remote, smrepo, "origin");
+	git_fetch_options fopts = GIT_FETCH_OPTIONS_INIT;
+	handle_libgit_ret(git_remote_fetch(remote, NULL, &fopts, NULL));
+
+	git_oid oid;
+	handle_libgit_ret(git_reference_name_to_id(&oid, smrepo, "refs/remotes/origin/master"));
+
+	git_object* branch = 0;
+	handle_libgit_ret(git_object_lookup(&branch, smrepo, &oid, GIT_OBJ_ANY));
+	handle_libgit_ret(git_reset(smrepo, branch, GIT_RESET_HARD, NULL));
+	handle_libgit_ret(git_submodule_add_finalize(sm));
+	git_submodule_free(sm);
+	git_repository_free(smrepo);
+      }
+
+      git_repository_free(g_repo);
+    }    
+  }
+  
   void init_project() {	
-		bool fileExists = file_exists(corePath);
-
-		if (!fileExists) {
-		  git_submodule *sm = 0;
-		  git_repository *smrepo = 0, *g_repo = 0;
-
-		  handle_libgit_ret(git_repository_open(&g_repo, "."));
-		  std::cerr << git_repository_path(g_repo) << std::endl;
-		  auto url = "https://github.com/cget/cget-core";
-		  
-		  handle_libgit_ret(git_submodule_add_setup(&sm, g_repo,
-							    url,
-							    ".cget",
-							    1));
-
-		  if(sm) {
-		    std::cerr << "Added" << std::endl;
-		    handle_libgit_ret(git_submodule_open(&smrepo, sm));
-
-			git_remote* remote = 0;
-		    git_remote_lookup(&remote, smrepo, "origin");
-		    git_fetch_options fopts = GIT_FETCH_OPTIONS_INIT;
-		    handle_libgit_ret(git_remote_fetch(remote, NULL, &fopts, NULL));
-
-		    git_oid oid;
-			handle_libgit_ret(git_reference_name_to_id(&oid, smrepo, "refs/remotes/origin/master"));
-
-			git_object* branch = 0;
-			handle_libgit_ret(git_object_lookup(&branch, smrepo, &oid, GIT_OBJ_ANY));
-			handle_libgit_ret(git_reset(smrepo, branch, GIT_RESET_HARD, NULL));
-		    handle_libgit_ret(git_submodule_add_finalize(sm));
-			git_submodule_free(sm);
-			git_repository_free(smrepo);
-		  }
-
-			git_repository_free(g_repo);
-		  std::cout
-		    << "IMPORTANT: Default core library file added at '.cget/core.cmake'. It's recommended that you add it to your repo. "
-		    << std::endl;
-
-		}
-
-		if (file_exists(packageFile))
-			return;
-		std::ofstream cget(packageFile);
-		cget << "include(${CGET_CORE_DIR}" << corePath << ")" << std::endl << std::endl;
-	}
+    submodule_add_if_not_exist("https://github.com/cget/cget-core", ".cget");
+    if (file_exists(packageFile))
+      return;
+    std::ofstream cget(packageFile);
+    cget << "include(${CGET_CORE_DIR}" << corePath << ")" << std::endl << std::endl;
+  }
 
 
-	void insert(const RepoMetadata &meta) {
+  void insert(const RepoMetadata &meta, const std::string& subrepo_loc) {
 		init_project();
 		std::fstream infile(packageFile, std::ios_base::in | std::ios_base::out);
 		std::string line;
@@ -197,14 +207,22 @@ namespace cget {
 
 		std::fstream outfile("./package.cmake", std::ios_base::app | std::ios_base::out);
 
-		outfile << targetPrefix << RepoSource::ToString(meta.source) << " ";
-		switch (meta.source) {
-			case RepoSource::REGISTRY:
-				break;
-			default:
-				outfile << meta.url << " ";
-		}
+		outfile << targetPrefix;
 
+		if( (meta.source == RepoSource::GIT || meta.source == RepoSource::GITHUB || meta.source == RepoSource::REGISTRY) &&
+		    !subrepo_loc.empty()) {
+		  submodule_add_if_not_exist(meta.FullUrl(), subrepo_loc);
+		  outfile << "SUBMODULE " << subrepo_loc << " ";
+		} else {
+		  outfile << RepoSource::ToString(meta.source) << " ";
+		  switch (meta.source) {
+		  case RepoSource::REGISTRY:
+		    break;
+		  default:
+		    outfile << meta.url << " ";
+		  }
+		}
+		
 		if (meta.version.size())
 			outfile << "VERSION " << meta.version;
 		outfile << ")" << std::endl;
