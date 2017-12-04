@@ -6,6 +6,8 @@
 #include "main-init.h"
 #include "main-install.h"
 
+#include "git2.h"
+
 typedef int (*main_fn)(int argc, char** argv);
 
 
@@ -26,10 +28,14 @@ static void printUsage() {
 static int exitWith(int rtn) {
   if(rtn != 0) 
     printUsage();
+
+  git_libgit2_shutdown();
   return rtn; 
 }
 
 int main(int argc, char* argv[]) {
+  git_libgit2_init();
+ 
   if(argc <= 1)
     return exitWith(-1);
   auto rtn = -1; 

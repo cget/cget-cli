@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include <limits.h>
 
+#include "git2.h"
+
 #ifndef _WIN32
 
 #include <unistd.h>
@@ -100,17 +102,67 @@ namespace cget {
 		}
 	}
 
-	void init_project() {
+
+  void handle_libgit_ret(int ret) {
+    if(ret != 0) {
+      std::cerr << "Error with git: '" << ret << "' " << giterr_last()->message << std::endl;
+    }
+  }
+
+  
+  static int just_return_origin(git_remote **out, git_repository *repo, const char *name, const char *url, void *payload)
+  {
+    return git_remote_lookup(out, repo, name);
+  }
+
+  static int just_return_repo(git_repository **out, const char *path, int bare, void *payload)
+  {
+    git_submodule *sm = (git_submodule*)payload;
+    return git_submodule_open(out, sm);
+  }
+
+  void init_project() {	
 		bool fileExists = file_exists(corePath);
 
-		cget_create_dir(".cget");
-		std::ofstream corelib(corePath);
-		if (!fileExists)
-			std::cout
-					<< "IMPORTANT: Default core library file added at '.cget/core.cmake'. It's recommended that you add it to your repo. "
-					<< std::endl;
+		if (!fileExists) {
+		  git_submodule *sm = 0;
+		  git_repository *smrepo = 0, *g_repo = 0;
 
-		corelib.write((const char *) _cget_core_cmake, _cget_core_cmake_len);
+		  handle_libgit_ret(git_repository_open(&g_repo, "."));
+		  std::cerr << git_repository_path(g_repo) << std::endl;
+		  auto url = "https://github.com/cget/cget-core";
+		  
+		  handle_libgit_ret(git_submodule_add_setup(&sm, g_repo,
+							    url,
+							    ".cget",
+							    1));
+
+		  if(sm) {
+		    std::cerr << "Added" << std::endl;
+		    handle_libgit_ret(git_submodule_open(&smrepo, sm));
+
+			git_remote* remote = 0;
+		    git_remote_lookup(&remote, smrepo, "origin");
+		    git_fetch_options fopts = GIT_FETCH_OPTIONS_INIT;
+		    handle_libgit_ret(git_remote_fetch(remote, NULL, &fopts, NULL));
+
+		    git_oid oid;
+			handle_libgit_ret(git_reference_name_to_id(&oid, smrepo, "refs/remotes/origin/master"));
+
+			git_object* branch = 0;
+			handle_libgit_ret(git_object_lookup(&branch, smrepo, &oid, GIT_OBJ_ANY));
+			handle_libgit_ret(git_reset(smrepo, branch, GIT_RESET_HARD, NULL));
+		    handle_libgit_ret(git_submodule_add_finalize(sm));
+			git_submodule_free(sm);
+			git_repository_free(smrepo);
+		  }
+
+			git_repository_free(g_repo);
+		  std::cout
+		    << "IMPORTANT: Default core library file added at '.cget/core.cmake'. It's recommended that you add it to your repo. "
+		    << std::endl;
+
+		}
 
 		if (file_exists(packageFile))
 			return;

@@ -43,9 +43,12 @@ add_executable(cget-cli
   src/cmake-utils.cc
 )
 
+find_library(LIB_GIT2 git2 NAMES git2 git2d)
+
 target_link_libraries(cget-cli cget
   ${gflags_LIBRARIES}
   ${CURL_LIBRARY}
+  ${LIB_GIT2}
   )
 set_target_properties(cget-cli PROPERTIES OUTPUT_NAME cget)
 
